@@ -11,5 +11,10 @@ class PurchaseSerializer(ModelSerializer):
     class Meta:
         model = Purchase
         fields = '__all__'
+        
+class CustomerSerializer(ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = '__all__'
 
 
