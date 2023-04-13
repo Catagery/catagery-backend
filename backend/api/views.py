@@ -42,7 +42,7 @@ def get_rangom_grafic_info(request):
 
 @api_view(['GET'])
 def get_grafic_info(request, category):
-    categories = Category.objects.all().order_by('-title')
+    categories = Category.objects.all()
     categories_serializer = CategorySerializer(categories, many=True)
     selected_category = Category.objects.get(title=category)
     print(selected_category)
