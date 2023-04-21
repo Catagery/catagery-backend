@@ -18,7 +18,7 @@ class Category(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=200)
     color = models.CharField(max_length=20)
-    total_spend = models.FloatField(null=True)
+    total_spend = models.FloatField(null=True, editable=False)
     
     def __str__(self):
         return self.title

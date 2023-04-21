@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import *
 import random
+import datetime
 # Create your views here.
 
 
@@ -41,7 +42,7 @@ def get_rangom_grafic_info(request):
 
 
 @api_view(['GET'])
-def get_grafic_info(request, category):
+def get_grafic_info(request, category: str):
     categories = Category.objects.all()
     categories_serializer = CategorySerializer(categories, many=True)
     selected_category = Category.objects.get(title=category)
@@ -62,6 +63,30 @@ def get_grafic_info(request, category):
 
 
 @api_view(['GET'])
+def get_grafic_info_by_date(request, category: int, start_date: str, end_date: str):
+    Start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    End_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    
+    categories = Category.objects.all()
+    categories_serializer = CategorySerializer(categories, many=True)
+    selected_category = Category.objects.get(id=category)
+    # selected_category_serializer = CategorySerializer(selected_category, many=False)
+    
+    customer = User.objects.get(id=1).customer
+    customer_serializer = CustomerSerializer(customer, many=False)
+    
+    purchase = Purchase.objects.filter(category=selected_category, customer=customer, date__range=[Start_date, End_date])
+    purchaseserializer = PurchaseSerializer(purchase, many=True)
+
+    response = {
+        'CategoryGrafic':purchaseserializer.data,
+        'Categories':categories_serializer.data
+    }
+    return Response(response)
+
+
+
+@api_view(['GET'])
 def get_top_categories(request):
     categories = Category.objects.all().order_by('-total_spend')
     categories_serializer = CategorySerializer(categories, many=True)
@@ -70,4 +95,16 @@ def get_top_categories(request):
     return Response({
         'top_categories':top_categories_serializer.data,
         'all_categories':categories_serializer.data
+        })
+    
+@api_view(["GET"])
+def get_recent_purchases(request):
+    customer = User.objects.get(id=1).customer
+    customer_serializer = CustomerSerializer(customer, many=False)
+    
+    purchases = Purchase.objects.filter(customer=customer).order_by("-date")[:4]
+    purchases_serializer = PurchaseSerializer(purchases, many=True)
+    
+    return Response({
+        'recentPurchases':purchases_serializer.data,
         })
