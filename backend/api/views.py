@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from .serializers import *
 import random
 import datetime
+import json
 # Create your views here.
 
 
@@ -97,6 +98,7 @@ def get_top_categories(request):
         'all_categories':categories_serializer.data
         })
     
+    
 @api_view(["GET"])
 def get_recent_purchases(request):
     customer = User.objects.get(id=1).customer
@@ -108,3 +110,27 @@ def get_recent_purchases(request):
     return Response({
         'recentPurchases':purchases_serializer.data,
         })
+
+@api_view(["GET"])
+def get_categories(request):
+    customer = User.objects.get(id=1).customer
+    
+    categories = Category.objects.all()
+    categories_serializer = CategorySerializer(categories, many=True)
+    
+    return Response({
+        'categories':categories_serializer.data
+    })
+    
+@api_view(["POST"])
+def purchases(request):
+    data = json.loads(request.body)
+    spended_sum = data['sum']
+    if spended_sum > 0:
+        category = Category.objects.get(title=data['category'])
+        Purchase.objects.create(category=category, price=spended_sum, customer=User.objects.get(id=1).customer)
+        return Response("Purchase was added", status=200)
+    else:
+        return Response("Sum can't be less than 0", status=404)
+
+    
