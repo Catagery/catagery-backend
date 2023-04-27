@@ -2,6 +2,7 @@ from .models import *
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
+
 class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
@@ -24,5 +25,4 @@ class CustomerSerializer(ModelSerializer):
     class Meta:
         model = Customer
         fields = '__all__'
-
 

@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from .serializers import *
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions, status
+
+
 # Create your views here.
 
 class UserRegister(APIView):
@@ -12,6 +14,8 @@ class UserRegister(APIView):
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.create(request.data)
+            data = request.data
+            
             if user:
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -25,6 +29,7 @@ class UserLogin(APIView):
         serializer = UserLoginSerializer(data= request.data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.check_user(request.data)
+            
             login(request, user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 

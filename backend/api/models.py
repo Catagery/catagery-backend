@@ -8,7 +8,7 @@ class Customer(models.Model):
     name = models.CharField(max_length=200, null=True)
     email = models.EmailField(max_length=200)
     password = models.CharField(max_length=200)
-    spended_sum = models.FloatField()
+    spended_sum = models.FloatField(default=0)
     
     def __str__(self):
         return self.name
@@ -56,6 +56,11 @@ class Purchase(models.Model):
     def add_purchase():
         pass
     
+    def create(self, *args, **kwargs):
+        self.category_set.customer_set.spended_sum += self.price
+        self.category_set.customer_set.save()
+        super(Purchase, self).create(*args, **kwargs)
+            
     def delete(self, *args, **kwargs):
         self.category.total_spend -= self.price
         self.category.save()

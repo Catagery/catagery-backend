@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
+from api.models import Customer
 
 UserModel = get_user_model()
 
@@ -13,6 +14,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
                                                  password=clean_data['password'],
                                                  username=clean_data['username'])
         user_obj.save()    
+        customer = Customer.objects.create(name=clean_data['username'], email=clean_data['email'], password=clean_data['password'], user=user_obj)
+        customer.save()
         return user_obj    
     
     
@@ -24,6 +27,7 @@ class UserLoginSerializer(serializers.Serializer):
         # user = authenticate(username=clean_data['email'], password=clean_data['password'])
         user = authenticate(username=clean_data['username'], password=clean_data['password'])
         if not user:
+            print('asdkjfhsdalkjfhsklufhklsadfhkjlsadfhjkasdfhkjsdafhgas')
             raise serializers.ValidationError("user not found")
         return user
 
