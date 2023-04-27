@@ -32,13 +32,24 @@ def get_rangom_grafic_info(request):
     customer = User.objects.get(id=1).customer
     customer_serializer = CustomerSerializer(customer, many=False)
     
-    purchase = Purchase.get_categoried_purchases(categories[random.randint(0, categories.count()-1)], customer)
+    categ = categories[random.randint(0, categories.count()-1)]
+    categ_serializer = CategorySerializer(categ)
+    
+    purchase = Purchase.get_categoried_purchases(categ, customer)
     purchaseserializer = PurchaseSerializer(purchase, many=True)
-
-    response = {
-        'CategoryGrafic':purchaseserializer.data,
-        'Categories':categories_serializer.data
-    }
+    if len(purchase) != 0:
+        response = {
+            'CategoryGrafic':purchaseserializer.data,
+            'Categories':categories_serializer.data,
+            'Category':categ_serializer.data,
+            'found': True
+        }
+    else:
+        response = {
+            'Categories':categories_serializer.data,
+            'Category':categ_serializer.data,
+            'found': False
+        }
     return Response(response)
 
 
@@ -48,7 +59,7 @@ def get_grafic_info(request, category: str):
     categories_serializer = CategorySerializer(categories, many=True)
     selected_category = Category.objects.get(title=category)
     print(selected_category)
-    # selected_category_serializer = CategorySerializer(selected_category, many=False)
+    selected_category_serializer = CategorySerializer(selected_category, many=False)
     
     customer = User.objects.get(id=1).customer
     customer_serializer = CustomerSerializer(customer, many=False)
@@ -56,21 +67,30 @@ def get_grafic_info(request, category: str):
     purchase = Purchase.get_categoried_purchases(selected_category, customer)
     purchaseserializer = PurchaseSerializer(purchase, many=True)
 
-    response = {
-        'CategoryGrafic':purchaseserializer.data,
-        'Categories':categories_serializer.data
-    }
+    if len(purchase) != 0:
+       response = {
+           'CategoryGrafic':purchaseserializer.data,
+           'Categories':categories_serializer.data,
+           'Category':selected_category_serializer.data,
+           'found': True
+       }
+    else:
+       response = {
+           'Categories':categories_serializer.data,
+           'Category':selected_category_serializer.data,
+           'found': False
+       }
     return Response(response)
 
 
 @api_view(['GET'])
-def get_grafic_info_by_date(request, category: int, start_date: str, end_date: str):
+def get_grafic_info_by_date(request, category: str, start_date: str, end_date: str):
     Start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     End_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
     
     categories = Category.objects.all()
     categories_serializer = CategorySerializer(categories, many=True)
-    selected_category = Category.objects.get(id=category)
+    selected_category = Category.objects.get(title=category)
     # selected_category_serializer = CategorySerializer(selected_category, many=False)
     
     customer = User.objects.get(id=1).customer
@@ -110,27 +130,38 @@ def get_recent_purchases(request):
     return Response({
         'recentPurchases':purchases_serializer.data,
         })
-
-@api_view(["GET"])
-def get_categories(request):
-    customer = User.objects.get(id=1).customer
     
-    categories = Category.objects.all()
-    categories_serializer = CategorySerializer(categories, many=True)
-    
-    return Response({
-        'categories':categories_serializer.data
-    })
     
 @api_view(["POST"])
 def purchases(request):
     data = json.loads(request.body)
     spended_sum = data['sum']
     if spended_sum > 0:
-        category = Category.objects.get(title=data['category'])
+        category: Category = Category.objects.get(title=data['category'])
         Purchase.objects.create(category=category, price=spended_sum, customer=User.objects.get(id=1).customer)
-        return Response("Purchase was added", status=200)
+        category.total_spend += spended_sum
+        category.save()
+        return Response({'status': 200})
     else:
-        return Response("Sum can't be less than 0", status=404)
+        return Response({"status":404})
 
     
+@api_view(["POST", "GET"])
+def categories(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        category = data["category"]
+        if Category.objects.filter(title=category, customer=User.objects.get(id=1).customer).exists() or category == "":
+            return Response({'created': False})
+        else:
+            Category.objects.create(title=category, customer=User.objects.get(id=1).customer, color=data["color"])
+            return Response({'created': True})
+    else:
+        customer = User.objects.get(id=1).customer
+    
+        categories = Category.objects.all()
+        categories_serializer = CategorySerializer(categories, many=True)
+        
+        return Response({
+            'categories':categories_serializer.data
+        })

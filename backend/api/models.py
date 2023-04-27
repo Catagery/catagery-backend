@@ -16,9 +16,9 @@ class Customer(models.Model):
 
 class Category(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)
-    title = models.CharField(max_length=200)
-    color = models.CharField(max_length=20)
-    total_spend = models.FloatField(null=True, editable=False)
+    title = models.CharField(null=True,max_length=200)
+    color = models.CharField(null=True, max_length=20, blank=True)
+    total_spend = models.FloatField(null=True, default=0)
     
     def __str__(self):
         return self.title
@@ -29,10 +29,11 @@ class Category(models.Model):
 
 
 class Purchase(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.DO_NOTHING)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     price = models.FloatField()
     date = models.DateField(auto_now_add=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    
     
     def __str__(self):
         return self.category.title
@@ -55,3 +56,8 @@ class Purchase(models.Model):
     def add_purchase():
         pass
     
+    def delete(self, *args, **kwargs):
+        self.category.total_spend -= self.price
+        self.category.save()
+        super(Purchase, self).delete(*args, **kwargs)
+
