@@ -20,14 +20,14 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
     
 class UserLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    username = serializers.CharField()
     password = serializers.CharField()
     
-    def check_user(seld, clean_data):
+    def check_user(self, clean_data):
         # user = authenticate(username=clean_data['email'], password=clean_data['password'])
+        print('\033[91m' + clean_data['username'] + '\033[0m')
         user = authenticate(username=clean_data['username'], password=clean_data['password'])
         if not user:
-            print('asdkjfhsdalkjfhsklufhklsadfhkjlsadfhjkasdfhkjsdafhgas')
             raise serializers.ValidationError("user not found")
         return user
 

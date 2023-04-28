@@ -1,10 +1,9 @@
-from django.contrib.auth import get_user_model, login, logout
+from django.contrib.auth import get_user_model, login, logout, authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import *
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions, status
-
 
 # Create your views here.
 
@@ -26,12 +25,15 @@ class UserLogin(APIView):
     authentication_classes = (SessionAuthentication, )
     
     def post(self, request):
-        serializer = UserLoginSerializer(data= request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.check_user(request.data)
-            
-            login(request, user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(username=username, password=password) # TODO Check if use can be authenticated
+        
+        if user:
+            login(request, user) #TODO use login to store session of the logged in user
+            return Response(username, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": (username, password)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLogout(APIView):
